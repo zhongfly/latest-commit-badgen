@@ -16,5 +16,8 @@
         "source": "/api/:data*",
         "destination": "/api/index?data=:data*"
       }
-    ]
+    ],
+    "github": {
+      "silent": true
+    }
   }
