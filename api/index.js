@@ -28,6 +28,7 @@ export default async function handler(request, response) {
           jsondata["status"] = await getBitbucket(workspace, repo, branch);
           break;
       }
+      jsondata["color"] = "green";
   } catch (err) {
     jsondata["status"] = "Fuction error";
   }
