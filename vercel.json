@@ -1,0 +1,20 @@
+{
+    "rewrites": [
+      {
+        "source": "/gitlab/:data*",
+        "destination": "/api/index?data=gitlab/:data*"
+      },
+      {
+        "source": "/bitbucket/:data*",
+        "destination": "/api/index?data=bitbucket/:data*"
+      },
+      {
+        "source": "/api/index/:data*",
+        "destination": "/api/index?data=:data*"
+      },
+      {
+        "source": "/api/:data*",
+        "destination": "/api/index?data=:data*"
+      }
+    ]
+  }
