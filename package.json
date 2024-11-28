@@ -1,6 +1,7 @@
 {
+	"type": "module",
 	"dependencies": {
 		"dayjs": "^1.11.6",
-		"got": "11"
+		"ky": "^1.7.2"
 	}
 }

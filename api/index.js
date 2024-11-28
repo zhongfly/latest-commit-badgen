@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
-import RelativeTime from "dayjs/plugin/relativeTime"
-import got from "got";
+import RelativeTime from "dayjs/plugin/relativeTime.js"
+import ky from 'ky';
 
 dayjs.extend(RelativeTime);
 
@@ -47,12 +47,12 @@ async function getGitlab(baseurl, id, ...args) {
     });
     api.replace(/&$/, "");
   }
-  let data = await got(api).json();
+  let data = await ky(api).json();
   return dayjs(data[0].committed_date).fromNow();
 }
 
 async function getBitbucket(workspace, repo, branch) {
-  let data = await got(
+  let data = await ky(
     `https://api.bitbucket.org/2.0/repositories/${workspace}/${repo}/commits/${branch}?pagelen=1`
   ).json();
   return dayjs(data.values[0].date).fromNow();
