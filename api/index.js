@@ -24,9 +24,12 @@ export default async function handler(request, response) {
           jsondata["status"] = await getGitlab(...args);
           break;
         case "bitbucket":
-          let [workspace, repo, branch = "master"] = args;
-          jsondata["status"] = await getBitbucket(workspace, repo, branch);
+          let [workspace, bitbucketRepo, branch = "master"] = args;
+          jsondata["status"] = await getBitbucket(workspace, bitbucketRepo, branch);
           break;
+        case "codeberg":
+          let [owner, codebergRepo, sha = ""] = args;
+          jsondata["status"] = await getCodeberg(owner, codebergRepo, sha);
       }
       jsondata["color"] = "green";
   } catch (err) {
@@ -56,6 +59,15 @@ async function getBitbucket(workspace, repo, branch) {
     `https://api.bitbucket.org/2.0/repositories/${workspace}/${repo}/commits/${branch}?pagelen=1`
   ).json();
   return dayjs(data.values[0].date).fromNow();
+}
+
+async function getCodeberg(owner, repo, sha="") {
+  let url = `https://codeberg.org/api/v1/repos/${owner}/${repo}/commits?stat=false&verification=false&files=false&limit=1`;
+  if (sha.length > 0) {
+    url += `&sha=${sha}`;
+  }
+  let data = await ky(url).json();
+  return dayjs(data[0].created).fromNow();
 }
 
 function isNumeric(str) {

@@ -9,6 +9,10 @@
         "destination": "/api/index?data=bitbucket/:data*"
       },
       {
+        "source": "/codeberg/:data*",
+        "destination": "/api/index?data=codeberg/:data*"
+      },
+      {
         "source": "/api/index/:data*",
         "destination": "/api/index?data=:data*"
       },
