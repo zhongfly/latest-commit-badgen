@@ -24,26 +24,39 @@ export default async function handler(request, response) {
   }
 
   try {
+    let daysDiff = null;
     switch (type) {
-      case "gitlab":
-        jsondata["status"] = await getGitlab(...args);
+      case "gitlab": {
+        const { statusText, days } = await getGitlab(...args);
+        jsondata["status"] = statusText;
+        daysDiff = days;
         break;
+      }
       case "bitbucket": {
         let [workspace, bitbucketRepo, branch = "master"] = args;
-        jsondata["status"] = await getBitbucket(workspace, bitbucketRepo, branch);
+        const { statusText, days } = await getBitbucket(workspace, bitbucketRepo, branch);
+        jsondata["status"] = statusText;
+        daysDiff = days;
         break;
       }
       case "codeberg": {
         let [owner, codebergRepo, sha = ""] = args;
-        jsondata["status"] = await getCodeberg(owner, codebergRepo, sha);
+        const { statusText, days } = await getCodeberg(owner, codebergRepo, sha);
+        jsondata["status"] = statusText;
+        daysDiff = days;
         break;
       }
       default:
         jsondata["status"] = "unsupported type";
     }
 
-    if (jsondata.status && !jsondata.status.startsWith("malformed") && jsondata.status !== "unsupported type") {
-      jsondata["color"] = "green";
+    if (
+      daysDiff !== null &&
+      jsondata.status &&
+      !jsondata.status.startsWith("malformed") &&
+      jsondata.status !== "unsupported type"
+    ) {
+      jsondata["color"] = getColorByDays(daysDiff);
     }
   } catch (err) {
     console.error(err);
@@ -87,14 +100,14 @@ async function getGitlab(baseurl, id, ...args) {
     api.replace(/&$/, "");
   }
   let data = await ky(api).json();
-  return dayjs(data[0].committed_date).fromNow();
+  return buildStatusAndDays(data[0].committed_date);
 }
 
 async function getBitbucket(workspace, repo, branch) {
   let data = await ky(
     `https://api.bitbucket.org/2.0/repositories/${workspace}/${repo}/commits/${branch}?pagelen=1`
   ).json();
-  return dayjs(data.values[0].date).fromNow();
+  return buildStatusAndDays(data.values[0].date);
 }
 
 async function getCodeberg(owner, repo, sha = "") {
@@ -103,7 +116,30 @@ async function getCodeberg(owner, repo, sha = "") {
     url += `&sha=${sha}`;
   }
   let data = await ky(url).json();
-  return dayjs(data[0].created).fromNow();
+  return buildStatusAndDays(data[0].created);
+}
+
+function buildStatusAndDays(dateString) {
+  const commitDate = dayjs(dateString);
+  const days = dayjs().diff(commitDate, "day");
+  return {
+    statusText: commitDate.fromNow(),
+    days,
+  };
+}
+
+function getColorByDays(days) {
+  // 根据天数区间映射颜色：
+  // < 7: brightgreen, 7–30: green, 30–180: yellowgreen,
+  // 180–365: yellow, 365–730: orange, > 730: red
+  const thresholds = [7, 30, 180, 365, 730];
+  const colors = ["brightgreen", "green", "yellowgreen", "yellow", "orange", "red"];
+  for (let i = 0; i < thresholds.length; i++) {
+    if (days < thresholds[i]) {
+      return colors[i];
+    }
+  }
+  return colors[colors.length - 1];
 }
 
 function isNumeric(str) {
