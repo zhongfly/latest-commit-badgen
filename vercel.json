@@ -13,6 +13,10 @@
         "destination": "/api/index?data=codeberg/:data*"
       },
       {
+        "source": "/github/:data*",
+        "destination": "/api/index?data=github/:data*"
+      },
+      {
         "source": "/api/index/:data*",
         "destination": "/api/index?data=:data*"
       },

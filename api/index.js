@@ -39,6 +39,13 @@ export default async function handler(request, response) {
         daysDiff = days;
         break;
       }
+      case "github": {
+        let [owner, githubRepo, branch = ""] = args;
+        const { statusText, days } = await getGithub(owner, githubRepo, branch);
+        jsondata["status"] = statusText;
+        daysDiff = days;
+        break;
+      }
       case "codeberg": {
         let [owner, codebergRepo, sha = ""] = args;
         const { statusText, days } = await getCodeberg(owner, codebergRepo, sha);
@@ -108,6 +115,15 @@ async function getBitbucket(workspace, repo, branch) {
     `https://api.bitbucket.org/2.0/repositories/${workspace}/${repo}/commits/${branch}?pagelen=1`
   ).json();
   return buildStatusAndDays(data.values[0].date);
+}
+
+async function getGithub(owner, repo, branch = "") {
+  let url = `https://api.github.com/repos/${owner}/${repo}/commits?per_page=1`;
+  if (branch) {
+    url += `&sha=${encodeURIComponent(branch)}`;
+  }
+  let data = await ky(url).json();
+  return buildStatusAndDays(data[0].commit.committer.date);
 }
 
 async function getCodeberg(owner, repo, sha = "") {
