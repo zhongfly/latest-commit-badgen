@@ -3,7 +3,7 @@ import { getProviderStatus } from "./providers.js";
 export default async function handler(request, response) {
   const { data } = request.query;
   console.log(`data=${data}`);
-  const [type, ...args] = data.split("/").filter(Boolean);
+  const [type, ...args] = (data || "").split("/").filter(Boolean);
   console.log(`type=${type}`);
   console.log(`args=${args}`);
 
@@ -13,8 +13,8 @@ export default async function handler(request, response) {
     color: "grey",
   };
 
-  // 简单的参数检查（保持兼容）
-  if (typeof args === "undefined") {
+  // Basic argument validation
+  if (!type) {
     jsondata.status = "malformed args";
     return sendResponse(request, response, jsondata);
   }
@@ -38,8 +38,8 @@ export default async function handler(request, response) {
     ) {
       jsondata.color = getColorByDays(daysDiff);
     }
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
+    console.error(error);
     jsondata.status = "Fuction error";
   }
 
@@ -49,7 +49,7 @@ export default async function handler(request, response) {
 function sendResponse(request, response, jsondata) {
   const ua = request.headers["user-agent"] || "";
 
-  // 对 Shields.io 使用其 JSON 格式
+  // Use Shields.io JSON format when requested
   if (ua.startsWith("Shields.io")) {
     const shieldsJson = {
       schemaVersion: 1,
@@ -60,12 +60,12 @@ function sendResponse(request, response, jsondata) {
     return response.status(200).json(shieldsJson);
   }
 
-  // 默认返回原始 badgen JSON
+  // Default: original badgen-style JSON
   return response.status(200).json(jsondata);
 }
 
 function getColorByDays(days) {
-  // 根据天数区间映射颜色：
+  // Map day ranges to colors:
   // < 7: brightgreen, 7–30: green, 30–180: yellowgreen,
   // 180–365: yellow, 365–730: orange, > 730: red
   const thresholds = [7, 30, 180, 365, 730];
